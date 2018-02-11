@@ -67,8 +67,6 @@
 #ifndef __iwl_op_mode_h__
 #define __iwl_op_mode_h__
 
-#include <linux/netdevice.h>
-
 // TODO: Remove stub after everything is done
 struct napi_struct {
     int something;

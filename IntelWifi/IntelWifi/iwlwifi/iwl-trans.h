@@ -67,7 +67,6 @@
 #ifndef __iwl_trans_h__
 #define __iwl_trans_h__
 
-#include <linux/ieee80211.h>
 #include <linux/kernel.h>
 
 #include "iwl-debug.h"

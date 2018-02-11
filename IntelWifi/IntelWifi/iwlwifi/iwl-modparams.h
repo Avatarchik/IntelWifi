@@ -64,8 +64,6 @@
 #define __iwl_modparams_h__
 
 #include <linux/types.h>
-//#include <linux/spinlock.h>
-//#include <linux/gfp.h>
 
 extern struct iwl_mod_params iwlwifi_mod_params;
 

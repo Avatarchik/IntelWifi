@@ -66,7 +66,6 @@
 #define __IWL_CONFIG_H__
 
 #include <linux/types.h>
-#include <linux/netdevice.h>
 #include <linux/ieee80211.h>
 #include <linux/nl80211.h>
 
