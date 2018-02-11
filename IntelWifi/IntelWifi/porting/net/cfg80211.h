@@ -123,7 +123,6 @@ struct ieee80211_channel {
     bool beacon_found;
     u32 orig_flags;
     int orig_mag, orig_mpwr;
-    enum nl80211_dfs_state dfs_state;
     unsigned long dfs_state_entered;
     unsigned int dfs_cac_ms;
 };
@@ -153,7 +152,7 @@ struct ieee80211_channel {
  * @IEEE80211_RATE_SUPPORTS_10MHZ: Rate can be used in 10 MHz mode
  */
 enum ieee80211_rate_flags {
-    IEEE80211_RATE_SHORT_PREAMBLE    = 1<<0,
+    IEEE80211_RATE_SHORT_PREAMBLE    = 1<<0, // MARK: Only this used
     IEEE80211_RATE_MANDATORY_A    = 1<<1,
     IEEE80211_RATE_MANDATORY_B    = 1<<2,
     IEEE80211_RATE_MANDATORY_G    = 1<<3,
@@ -204,21 +203,6 @@ struct ieee80211_sta_ht_cap {
     struct ieee80211_mcs_info mcs;
 };
 
-/**
- * struct ieee80211_sta_vht_cap - STA's VHT capabilities
- *
- * This structure describes most essential parameters needed
- * to describe 802.11ac VHT capabilities for an STA.
- *
- * @vht_supported: is VHT supported by the STA
- * @cap: VHT capabilities map as described in 802.11ac spec
- * @vht_mcs: Supported VHT MCS rates
- */
-struct ieee80211_sta_vht_cap {
-    bool vht_supported;
-    u32 cap; /* use IEEE80211_VHT_CAP_ */
-    struct ieee80211_vht_mcs_info vht_mcs;
-};
 
 /**
  * struct ieee80211_supported_band - frequency band definition
@@ -244,7 +228,6 @@ struct ieee80211_supported_band {
     int n_channels;
     int n_bitrates;
     struct ieee80211_sta_ht_cap ht_cap;
-    struct ieee80211_sta_vht_cap vht_cap;
 };
 
 int ieee80211_channel_to_frequency(int chan, enum nl80211_band band);
@@ -906,7 +889,6 @@ struct wiphy {
     struct dentry *debugfsdir;
     
     const struct ieee80211_ht_cap *ht_capa_mod_mask;
-    const struct ieee80211_vht_cap *vht_capa_mod_mask;
     
 //    struct list_head wdev_list;
     

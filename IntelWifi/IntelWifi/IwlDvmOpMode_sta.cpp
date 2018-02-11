@@ -152,6 +152,11 @@ int iwl_send_add_sta(struct iwl_priv *priv, struct iwl_addsta_cmd *sta, u8 flags
     pkt = cmd.resp_pkt;
     add_sta_resp = (struct iwl_add_sta_resp *)pkt->data;
     
+    if (!add_sta_resp) {
+        IWL_ERR(priv, "Received NULL pkt->data!");
+        return -EIO;
+    }
+    
     /* debug messages are printed in the handler */
     if (add_sta_resp->status == ADD_STA_SUCCESS_MSK) {
         //IOSimpleLockLock(priv->sta_lock);
