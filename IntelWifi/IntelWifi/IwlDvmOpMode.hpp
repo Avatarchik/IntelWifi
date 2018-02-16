@@ -15,7 +15,7 @@ extern "C" {
 #include <linux/jiffies.h>
     
     #include "iwl-debug.h"
-    
+#include "net80211/ieee80211.h"
 }
 
 #include <IOKit/IOBufferMemoryDescriptor.h>

@@ -231,47 +231,6 @@ struct ieee80211_hdr {
     u8 addr4[ETH_ALEN];
 } __packed __aligned(2);
 
-struct ieee80211_hdr_3addr {
-    __le16 frame_control;
-    __le16 duration_id;
-    u8 addr1[ETH_ALEN];
-    u8 addr2[ETH_ALEN];
-    u8 addr3[ETH_ALEN];
-    __le16 seq_ctrl;
-} __packed __aligned(2);
-
-struct ieee80211_qos_hdr {
-    __le16 frame_control;
-    __le16 duration_id;
-    u8 addr1[ETH_ALEN];
-    u8 addr2[ETH_ALEN];
-    u8 addr3[ETH_ALEN];
-    __le16 seq_ctrl;
-    __le16 qos_ctrl;
-} __packed __aligned(2);
-
-
-/**
- * ieee80211_is_mgmt - check if type is IEEE80211_FTYPE_MGMT
- * @fc: frame control bytes in little-endian byteorder
- */
-static inline bool ieee80211_is_mgmt(__le16 fc)
-{
-    return (fc & cpu_to_le16(IEEE80211_FCTL_FTYPE)) ==
-    cpu_to_le16(IEEE80211_FTYPE_MGMT);
-}
-
-
-/**
- * ieee80211_is_beacon - check if IEEE80211_FTYPE_MGMT && IEEE80211_STYPE_BEACON
- * @fc: frame control bytes in little-endian byteorder
- */
-static inline bool ieee80211_is_beacon(__le16 fc)
-{
-    return (fc & cpu_to_le16(IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE)) ==
-    cpu_to_le16(IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON);
-}
-
 
 
 

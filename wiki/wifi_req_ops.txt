@@ -1,0 +1,18 @@
+Here I would like to write down must-have operations for WIFI
+
+Management frames. Frame type mask: 0x0000
+IEEE80211_STYPE_ASSOC_REQ - Association request
+IEEE80211_STYPE_ASSOC_RESP - Association response.
+IEEE80211_STYPE_DISASSOC - Disassociation frame
+
+IEEE80211_STYPE_REASSOC_RESP - Reassociation response. 
+IEEE80211_STYPE_REASSOC_REQ - Reassociation response
+
+IEEE80211_STYPE_PROBE_REQ - Probe request.
+IEEE80211_STYPE_PROBE_RESP - Probe response
+IEEE80211_STYPE_BEACON - Beacon response
+Probe and beacon responses are basically the same so you can implement one function that will process both of them
+
+IEEE80211_STYPE_AUTH - Authentication frame
+IEEE80211_STYPE_DEAUTH - Deauth
+IEEE80211_STYPE_ACTION - Action frame ???

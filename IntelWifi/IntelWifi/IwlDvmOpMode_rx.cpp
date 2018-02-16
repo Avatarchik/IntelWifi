@@ -565,12 +565,10 @@ static void iwlagn_rx_reply_rx_phy(struct iwl_priv *priv,
  * returns non-zero if packet should be dropped
  */
 static int iwlagn_set_decrypted_flag(struct iwl_priv *priv,
-                                     struct ieee80211_hdr *hdr,
+                                     struct ieee80211_frame *hdr,
                                      u32 decrypt_res,
                                      struct ieee80211_rx_status *stats)
 {
-    u16 fc = le16_to_cpu(hdr->frame_control);
-
     /*
      * All contexts have the same setting here due to it being
      * a module parameter, so OK to check any context.
@@ -578,7 +576,7 @@ static int iwlagn_set_decrypted_flag(struct iwl_priv *priv,
     if (priv->contexts[IWL_RXON_CTX_BSS].active.filter_flags & RXON_FILTER_DIS_DECRYPT_MSK)
         return 0;
 
-    if (!(fc & IEEE80211_FCTL_PROTECTED))
+    if (!(hdr->i_fc[1] & IEEE80211_FC1_PROTECTED))
         return 0;
 
     IWL_DEBUG_RX(priv, "decrypt_res:0x%x\n", decrypt_res);
@@ -611,7 +609,7 @@ static int iwlagn_set_decrypted_flag(struct iwl_priv *priv,
 
 // line 622
 static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
-                                           struct ieee80211_hdr *hdr,
+                                           struct ieee80211_frame *hdr,
                                            u16 len,
                                            u32 ampdu_status,
                                            struct iwl_rx_cmd_buffer *rxb,
@@ -629,10 +627,11 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
     if (!iwlwifi_mod_params.swcrypto && iwlagn_set_decrypted_flag(priv, hdr, ampdu_status, stats))
         return;
     
-    if (ieee80211_is_mgmt(hdr->frame_control)) {
-        IWL_DEBUG_RX(priv, "Management frame. Frame control: 0x%x", hdr->frame_control);
+    if (IEEE80211_IS_MGMT(hdr)) {
+//        IWL_DEBUG_RX(priv, "Management frame. Frame control: 0x%x", hdr->i_fc);
         struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)(pkt->data + sizeof(ampdu_status));
-        if (ieee80211_is_beacon(hdr->frame_control) && priv->scan_request) {
+        
+        if (hdr->i_fc[0] & IEEE80211_FC0_SUBTYPE_BEACON) {
             u8 ssid_el_id = mgmt->u.beacon.variable[0];
             u8 ssid_len = mgmt->u.beacon.variable[1];
             char ssid[IEEE80211_MAX_SSID_LEN + 1];
@@ -743,7 +742,7 @@ static int iwlagn_calc_rssi(struct iwl_priv *priv, struct iwl_rx_phy_res *rx_res
  */
 static void iwlagn_rx_reply_rx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb)
 {
-    struct ieee80211_hdr *header;
+    struct ieee80211_frame *header;
     struct ieee80211_rx_status rx_status = {};
     struct iwl_rx_packet *pkt = (struct iwl_rx_packet *)rxb_addr(rxb);
     struct iwl_rx_phy_res *phy_res;
@@ -759,7 +758,7 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *
     }
     phy_res = &priv->last_phy_res;
     amsdu = (struct iwl_rx_mpdu_res_start *)pkt->data;
-    header = (struct ieee80211_hdr *)(pkt->data + sizeof(*amsdu));
+    header = (struct ieee80211_frame *)(pkt->data + sizeof(*amsdu));
     len = le16_to_cpu(amsdu->byte_count);
     rx_pkt_status = *(__le32 *)(pkt->data + sizeof(*amsdu) + len);
     ampdu_status = iwlagn_translate_rx_status(priv, le32_to_cpu(rx_pkt_status));
