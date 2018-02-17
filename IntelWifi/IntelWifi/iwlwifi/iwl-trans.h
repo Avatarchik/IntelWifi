@@ -77,6 +77,8 @@
 #include "fw/api/cmdhdr.h"
 #include "fw/api/txq.h"
 
+#include <sys/kpi_mbuf.h>
+
 // TODO: Remove stubs
 struct sk_buff { int something; };
 struct sk_buff_head{int something;};
@@ -266,7 +268,7 @@ static inline void iwl_free_resp(struct iwl_host_cmd *cmd)
 }
 
 struct iwl_rx_cmd_buffer {
-	void *_page;
+	mbuf_t _page;
 	int _offset;
 	bool _page_stolen;
 	u32 _rx_page_order;
@@ -277,7 +279,7 @@ static inline void *rxb_addr(struct iwl_rx_cmd_buffer *r)
 {
     
 	//return (void *)((unsigned long)page_address(r->_page) + r->_offset);
-    return (void *)((u8*)r->_page + r->_offset);//(void *) ((u8*)r->_page + r->_offset);
+    return (void *)((u8*)mbuf_data(r->_page) + r->_offset);//(void *) ((u8*)r->_page + r->_offset);
 }
 
 static inline int rxb_offset(struct iwl_rx_cmd_buffer *r)

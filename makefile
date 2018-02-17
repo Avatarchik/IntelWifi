@@ -12,8 +12,8 @@ endif
 
 .PHONY: all
 all:
-	sudo kextunload $(KEXT)
-	sudo rm -rf $(KEXT)
+	sudo kextunload $(KEXT); true
+	sudo rm -rf $(KEXT); true
 	xcodebuild build $(OPTIONS) -configuration Debug
 
 .PHONY: build

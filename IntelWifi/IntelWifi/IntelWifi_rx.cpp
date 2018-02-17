@@ -42,10 +42,12 @@
 #include <IOKit/IODMACommand.h>
 #include <sys/queue.h>
 
+
 extern "C" {
 #include "iwl-fh.h"
 #include "iwl-trans.h"
 #include "commands.h"
+    #include "iw_utils/allocation.h"
 }
 
 /******************************************************************************
@@ -173,7 +175,7 @@ static int iwl_rxq_space(const struct iwl_rxq *rxq)
     if (rxq->queue_size & (rxq->queue_size - 1)) {
         IWL_WARN(rxq, "rxq->queue_size must be a power of 2");
     }
-    
+
     /*
      * There can be up to (RX_QUEUE_ISZE - 1) free slots, to avoid ambiguity
      * between empty and completely full queues.
@@ -380,11 +382,9 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans, struct iwl_rxq *rxq)
  */
 static mbuf_t iwl_pcie_rx_alloc_page(struct iwl_trans *trans)
 {
-    mbuf_t m;
-    errno_t ret = mbuf_getcluster(MBUF_DONTWAIT, MBUF_TYPE_DATA, 4096, &m);
-    return ret == 0 ? m : NULL;
-    
-    //return IOBufferMemoryDescriptor::inTaskWithPhysicalMask(kernel_task, 0, PAGE_SIZE, 0x00000000FFFFFFFFULL);
+    IOEthernetController *dev = static_cast<IOEthernetController *>(trans->dev);
+    mbuf_t m = dev->allocatePacket(4096);
+    return m;
 }
 
 /* line 384
@@ -419,7 +419,7 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, struct iwl_rxq *rxq)
         
         if (TAILQ_EMPTY(&rxq->rx_used)) {
             //IOSimpleLockUnlock(rxq->lock);
-            mbuf_freem(page);
+            //mbuf_freem(page);
             page = NULL;
             return;
         }
@@ -434,7 +434,7 @@ static void iwl_pcie_rxq_alloc_rbs(struct iwl_trans *trans, struct iwl_rxq *rxq)
         rxb->page_dma = iwl_dmamap_mbuf(trans, rxb->page);
         
         if (!rxb->page_dma) {
-            mbuf_freem(rxb->page);
+            //mbuf_freem(rxb->page);
             rxb->page = NULL;
             
             //IOSimpleLockLock(rxq->lock);
@@ -620,10 +620,12 @@ static int iwl_pcie_rx_alloc(struct iwl_trans *trans)
     if (WARN_ON(trans_pcie->rxq))
         return -EINVAL;
     
-    trans_pcie->rxq =  (struct iwl_rxq *)iwh_zalloc(sizeof(struct iwl_rxq) * trans->num_rx_queues);
+    trans_pcie->rxq =  (struct iwl_rxq *)IOMalloc(sizeof(struct iwl_rxq) * trans->num_rx_queues);
     
     if (!trans_pcie->rxq)
         return -EINVAL;
+
+    bzero(trans_pcie->rxq, sizeof(struct iwl_rxq) * trans->num_rx_queues);
     
     rba->lock = IOSimpleLockAlloc();
     
@@ -1209,7 +1211,7 @@ void IntelWifi::iwl_pcie_rx_handle_rb(struct iwl_trans *trans, struct iwl_rxq *r
              * list have no page(s)
              */
             //__free_pages(rxb->page, trans_pcie->rx_page_order);
-            mbuf_freem(rxb->page);
+            //mbuf_freem(rxb->page);
             rxb->page = NULL;
             iwl_pcie_rx_reuse_rbd(trans, rxb, rxq, emergency);
         } else {
