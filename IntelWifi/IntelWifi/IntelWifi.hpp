@@ -31,10 +31,11 @@ extern "C" {
 #include <IOKit/network/IOEthernetController.h>
 #include <IOKit/network/IOEthernetInterface.h>
 #include <IOKit/network/IOPacketQueue.h>
+#include <IOKit/network/IOMbufMemoryCursor.h>
 #include <IOKit/IOMemoryCursor.h>
 
 
-
+#include "iw_utils/allocation.h"
 #include "IwlTransOps.h"
 #include "IwlOpModeOps.h"
 
