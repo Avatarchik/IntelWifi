@@ -7,6 +7,7 @@
 //
 
 #include "dma-utils.h"
+#include "../iw_utils/allocation.h"
 
 struct iwl_dma_ptr* allocate_dma_buf(size_t size, mach_vm_address_t physical_mask) {
     IOOptionBits options = kIODirectionInOut | kIOMemoryPhysicallyContiguous | kIOMapInhibitCache;
@@ -34,7 +35,7 @@ struct iwl_dma_ptr* allocate_dma_buf(size_t size, mach_vm_address_t physical_mas
         return NULL;
     }
     
-    struct iwl_dma_ptr *result = (struct iwl_dma_ptr *) IOMalloc(sizeof(struct iwl_dma_ptr));
+    struct iwl_dma_ptr *result = (struct iwl_dma_ptr *) iwh_malloc(sizeof(struct iwl_dma_ptr));
     result->addr = bmd->getBytesNoCopy();
     result->dma = seg.fIOVMAddr;
     result->size = size;
@@ -57,5 +58,5 @@ void free_dma_buf(struct iwl_dma_ptr *dma_ptr) {
     dma_ptr->addr = NULL;
     dma_ptr->dma = 0;
     
-    IOFree(dma_ptr, sizeof(*dma_ptr));
+    iwh_free(dma_ptr);
 }

@@ -78,7 +78,6 @@
 
 #include "firmware_file.h"
 
-
 struct firmware {
     size_t size;
     const u8 *data;
@@ -136,7 +135,7 @@ struct fw_sec {
 
 static void iwl_free_fw_desc(struct iwl_drv *drv, struct fw_desc *desc)
 {
-    IOFree(desc->data, desc->len);
+    iwh_free(desc->data);
 	desc->data = NULL;
 	desc->len = 0;
 }
@@ -146,30 +145,29 @@ static void iwl_free_fw_img(struct iwl_drv *drv, struct fw_img *img)
     int i;
     for (i = 0; i < img->num_sec; i++)
         iwl_free_fw_desc(drv, &img->sec[i]);
-    IOFree(img->sec, sizeof(*img->sec) * img->num_sec);
+    iwh_free(img->sec);
 }
 
 static void iwl_dealloc_ucode(struct iwl_drv *drv)
 {
 	int i;
 
-    IOFree(drv->fw.dbg_dest_tlv, sizeof(struct iwl_fw_dbg_dest_tlv));
+    iwh_free(drv->fw.dbg_dest_tlv);
     for (i = 0; i < ARRAY_SIZE(drv->fw.dbg_conf_tlv); i++){
-        IOFree(drv->fw.dbg_conf_tlv[i], sizeof(struct iwl_fw_dbg_conf_tlv));
+        iwh_free(drv->fw.dbg_conf_tlv[i]);
     }
 		
     for (i = 0; i < ARRAY_SIZE(drv->fw.dbg_trigger_tlv); i++){
-        IOFree(drv->fw.dbg_trigger_tlv[i], sizeof(struct iwl_fw_dbg_trigger_tlv));
+        iwh_free(drv->fw.dbg_trigger_tlv[i]);
     }
 
-    IOFree(drv->fw.dbg_mem_tlv, sizeof(struct iwl_fw_dbg_mem_seg_tlv));
+    iwh_free(drv->fw.dbg_mem_tlv);
 
 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
 		iwl_free_fw_img(drv, drv->fw.img + i);
 }
 
-static int iwl_alloc_fw_desc(struct iwl_drv *drv, struct fw_desc *desc,
-			     struct fw_sec *sec)
+static int iwl_alloc_fw_desc(struct iwl_drv *drv, struct fw_desc *desc, struct fw_sec *sec)
 {
 	void *data;
 
@@ -178,7 +176,7 @@ static int iwl_alloc_fw_desc(struct iwl_drv *drv, struct fw_desc *desc,
 	if (!sec || !sec->size)
 		return -EINVAL;
 
-    data = IOMalloc(sec->size);
+    data = iwh_malloc(sec->size);
 	if (!data)
 		return -ENOMEM;
 
@@ -195,7 +193,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw,
 
 static int request_firmware_nowait(void *context,
                                    void (*cont)(const struct firmware *fw, void *context)) {
-    struct firmware* fw = (struct firmware *)IOMalloc(sizeof(struct firmware));
+    struct firmware* fw = (struct firmware *)iwh_malloc(sizeof(struct firmware));
     fw->size = iwlwifi_6000g2b_6_ucode_len;
     fw->data = iwlwifi_6000g2b_6_ucode;
     
@@ -323,10 +321,9 @@ static void alloc_sec_data(struct iwl_firmware_pieces *pieces,
     if (img->sec && img->sec_counter >= size)
         return;
 
-    struct fw_sec *sec_memory = IOMalloc(alloc_size);
+    struct fw_sec *sec_memory = iwh_malloc(alloc_size);
 
     if (!sec_memory) {
-        IOLog("ALLOC FAILED!!!!");
         return;
     }
     
@@ -444,7 +441,7 @@ static int iwl_store_ucode_sec(struct iwl_firmware_pieces *pieces,
 	img = &pieces->img[type];
 
     alloc_size = sizeof(*img->sec) * (img->sec_counter + 1);
-    sec = IOMalloc(alloc_size);
+    sec = iwh_malloc(alloc_size);
     memcpy(sec, img->sec, sizeof(*img->sec) * img->sec_counter);
 
     if (!sec)
@@ -1086,9 +1083,8 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
 			}
 
 			size = sizeof(*pieces->dbg_mem_tlv) * (pieces->n_dbg_mem_tlv + 1);
-            n = IOMalloc(size);
-            memcpy(n, pieces->dbg_mem_tlv, sizeof(*pieces->dbg_mem_tlv) *
-                   (pieces->n_dbg_mem_tlv));
+            n = iwh_malloc(size);
+            memcpy(n, pieces->dbg_mem_tlv, sizeof(*pieces->dbg_mem_tlv) * (pieces->n_dbg_mem_tlv));
 			if (!n)
 				return -ENOMEM;
 			pieces->dbg_mem_tlv = n;
@@ -1143,10 +1139,9 @@ static int iwl_alloc_ucode(struct iwl_drv *drv,
 	struct fw_desc *sec;
     
     vm_size_t size = sizeof(*sec) * pieces->img[type].sec_counter;
-    sec = IOMalloc(size);
+    sec = iwh_malloc(size);
     
     if (!sec) {
-        IOLog("IOMalloc fail");
         return -ENOMEM;
     }
     bzero(sec, size);
@@ -1156,7 +1151,6 @@ static int iwl_alloc_ucode(struct iwl_drv *drv,
 
     for (i = 0; i < pieces->img[type].sec_counter; i++) {
         if (iwl_alloc_fw_desc(drv, &sec[i], get_sec(pieces, type, i))) {
-            IOLog("alloc fw_desc fail");
             return -ENOMEM;
         }
     }
@@ -1272,11 +1266,10 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
 			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE;
 	fw->ucode_capa.n_scan_channels = IWL_DEFAULT_SCAN_CHANNELS;
     
-    pieces = IOMalloc(sizeof(*pieces));
+    pieces = iwh_zalloc(sizeof(*pieces));
     
     if (!pieces)
         goto out_free_fw;
-    bzero(pieces, sizeof(*pieces));
 
     if (!ucode_raw)
         goto try_again;
@@ -1438,7 +1431,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
 
     /* We have our copies now, allow OS release its copies */
     //release_firmware(ucode_raw);
-    //IOFree(ucode_raw, sizeof(*ucode_raw));
+    //iwh_free(ucode_raw);
 
     IOLockLock(iwlwifi_opmode_table_mtx);
     
@@ -1499,7 +1492,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
 	/* try next, if any */
     
 //    release_firmware(ucode_raw);
-//    IOFree(ucode_raw, sizeof(*ucode_raw));
+//    iwh_free(ucode_raw);
 	if (iwl_request_firmware(drv, false))
 		goto out_unbind;
 	goto free;
@@ -1508,19 +1501,19 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
     IOLog("out_free_fw");
     iwl_dealloc_ucode(drv);
 	//release_firmware(ucode_raw);
-//    IOFree(ucode_raw, sizeof(*ucode_raw));
+//    iwh_free(ucode_raw);
  out_unbind:
 	//complete(&drv->request_firmware_complete);
 	//device_release_driver(drv->trans->dev);
  free:
-	if (pieces) {
+    if (pieces) {
         for (i = 0; i < ARRAY_SIZE(pieces->img); i++) {
-            IOFree(pieces->img[i].sec, sizeof(*pieces->img[i].sec) * pieces->img[i].sec_counter);
+            iwh_free(pieces->img[i].sec);
         }
-			
-        IOFree(pieces->dbg_mem_tlv, sizeof(*pieces->dbg_mem_tlv));
-        IOFree(pieces, sizeof(*pieces));
-	}
+
+        iwh_free(pieces->dbg_mem_tlv);
+        iwh_free(pieces);
+    }
 }
 
 struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
@@ -1530,13 +1523,12 @@ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans)
 	struct iwl_drv *drv;
 	int ret;
 
-    drv = IOMalloc(sizeof(*drv));
+    drv = iwh_zalloc(sizeof(*drv));
     
 	if (!drv) {
 		ret = -ENOMEM;
 		goto err;
 	}
-    bzero(drv, sizeof(*drv));
 
 	drv->trans = trans;
 	drv->dev = trans->dev;
@@ -1581,7 +1573,7 @@ err_free_dbgfs:
 err_free_drv:
 #endif
 	//kfree(drv);
-    IOFree(drv, sizeof(*drv));
+    iwh_free(drv);
 err:
 	return ERR_PTR(ret);
 }
@@ -1614,7 +1606,7 @@ void iwl_drv_stop(struct iwl_drv *drv)
     
     IOLockFree(iwlwifi_opmode_table_mtx);
 
-    IOFree(drv, sizeof(*drv));
+    iwh_free(drv);
 }
 
 

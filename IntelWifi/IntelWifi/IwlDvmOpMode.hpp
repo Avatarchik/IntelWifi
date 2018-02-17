@@ -16,6 +16,7 @@ extern "C" {
     
     #include "iwl-debug.h"
 #include "net80211/ieee80211.h"
+#include "iw_utils/allocation.h"
 }
 
 #include <IOKit/IOBufferMemoryDescriptor.h>

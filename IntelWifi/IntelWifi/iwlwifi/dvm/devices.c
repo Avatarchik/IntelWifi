@@ -35,6 +35,8 @@
 #include "dev.h"
 #include "commands.h"
 
+#include "../../iw_utils/allocation.h"
+
 
 /*
  * 1000 series
@@ -552,7 +554,7 @@ static int iwl6000_hw_channel_switch(struct iwl_priv *priv, struct ieee80211_cha
     };
     int err;
 
-    cmd = IOMalloc(sizeof(*cmd));
+    cmd = iwh_malloc(sizeof(*cmd));
     if (!cmd)
         return -ENOMEM;
     bzero(cmd, sizeof(*cmd));
@@ -588,7 +590,7 @@ static int iwl6000_hw_channel_switch(struct iwl_priv *priv, struct ieee80211_cha
     cmd->expect_beacon = ch_switch->chandef.chan->flags & IEEE80211_CHAN_RADAR;
 
     err = iwl_dvm_send_cmd(priv, &hcmd);
-    IOFree(cmd, sizeof(*cmd));
+    iwh_free(cmd);
     return err;
 }
 

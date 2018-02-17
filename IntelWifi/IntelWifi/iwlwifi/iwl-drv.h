@@ -66,6 +66,7 @@
 #define __iwl_drv_h__
 
 #include <sys/queue.h>
+#include "../iw_utils/allocation.h"
 
 #include "fw/img.h"
 
